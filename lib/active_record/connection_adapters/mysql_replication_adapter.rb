@@ -139,18 +139,24 @@ module ActiveRecord
         end
       end
 
-      def insert(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
+      # Vodpod fix. Call parent versions to get proper query cache invalidation.
+      # See: http://geekblog.vodpod.com/?p=118 for details.
+      def insert_sql(sql, name = nil, pk = nil, id_value = nil, sequence_name = nil) #:nodoc:
         ensure_master
-        execute(sql, name = nil)
+        super sql, name
         id_value || @connection.insert_id
       end
 
-      def update(sql, name = nil) #:nodoc:
+      def update_sql(sql, name = nil) #:nodoc:
         ensure_master
-        execute(sql, name)
+        super
         @connection.affected_rows
       end
 
+      def delete_sql(sql, name = nil)
+        update_sql(sql, name)
+      end
+      
       private
       # Create the array of clone Mysql instances. Note that the instances
       # actually don't correspond to the clone specs at this point. We're 
